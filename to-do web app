@@ -1,0 +1,114 @@
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { format } from "date-fns";
+
+export default function TodoApp() {
+  const [lists, setLists] = useState([]);
+  const [newListName, setNewListName] = useState("");
+  const [taskInput, setTaskInput] = useState("");
+  const [selectedListIndex, setSelectedListIndex] = useState(null);
+  const [taskDateTime, setTaskDateTime] = useState("");
+
+  const addList = () => {
+    if (!newListName.trim()) return;
+    setLists([...lists, { name: newListName, tasks: [] }]);
+    setNewListName("");
+  };
+
+  const addTask = () => {
+    if (!taskInput.trim() || selectedListIndex === null) return;
+    const updatedLists = [...lists];
+    updatedLists[selectedListIndex].tasks.push({
+      text: taskInput,
+      completed: false,
+      datetime: taskDateTime,
+    });
+    setLists(updatedLists);
+    setTaskInput("");
+    setTaskDateTime("");
+  };
+
+  const toggleTaskCompletion = (listIndex, taskIndex) => {
+    const updatedLists = [...lists];
+    updatedLists[listIndex].tasks[taskIndex].completed =
+      !updatedLists[listIndex].tasks[taskIndex].completed;
+    setLists(updatedLists);
+  };
+
+  const editTask = (listIndex, taskIndex, newText) => {
+    const updatedLists = [...lists];
+    updatedLists[listIndex].tasks[taskIndex].text = newText;
+    setLists(updatedLists);
+  };
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-4">To-Do App</h1>
+      <div className="mb-6 flex gap-2">
+        <Input
+          placeholder="New List Name"
+          value={newListName}
+          onChange={(e) => setNewListName(e.target.value)}
+        />
+        <Button onClick={addList}>Add List</Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {lists.map((list, listIndex) => (
+          <Card key={listIndex}>
+            <CardContent className="p-4">
+              <h2 className="text-xl font-semibold mb-2">{list.name}</h2>
+
+              <div className="flex gap-2 mb-2">
+                <Input
+                  placeholder="New Task"
+                  value={selectedListIndex === listIndex ? taskInput : ""}
+                  onChange={(e) => {
+                    setSelectedListIndex(listIndex);
+                    setTaskInput(e.target.value);
+                  }}
+                />
+                <Input
+                  type="datetime-local"
+                  value={selectedListIndex === listIndex ? taskDateTime : ""}
+                  onChange={(e) => setTaskDateTime(e.target.value)}
+                />
+                <Button onClick={addTask}>Add Task</Button>
+              </div>
+
+              <ul className="space-y-2">
+                {list.tasks.map((task, taskIndex) => (
+                  <li key={taskIndex} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={task.completed}
+                      onCheckedChange={() =>
+                        toggleTaskCompletion(listIndex, taskIndex)
+                      }
+                    />
+                    <input
+                      className={`border p-1 rounded w-full ${
+                        task.completed ? "line-through text-gray-400" : ""
+                      }`}
+                      value={task.text}
+                      onChange={(e) =>
+                        editTask(listIndex, taskIndex, e.target.value)
+                      }
+                    />
+                    {task.datetime && (
+                      <span className="text-sm text-gray-500">
+                        {format(new Date(task.datetime), "PPpp")}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
